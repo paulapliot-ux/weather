@@ -1,0 +1,52 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #eef7fa;
+  color: #333;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+h1, h2 {
+  color: #005f73;
+}
+
+button, input[type="submit"] {
+  background-color: #005f73;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover, input[type="submit"]:hover {
+  background-color: #003b46;
+}
+
+input, textarea {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid #005f73;
+  border-radius: 5px;
+}
+
+pre {
+  text-align: left;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-top: 20px;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+  overflow-x: auto;
+}
+.table-mica {
+    width: 50%;
+    font-size: 14px;
+    margin: 10px auto;
+    border: 1px solid #999;
+}
+

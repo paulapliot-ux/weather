@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestionare date meteo</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+     
+
+
+    
+    <style>
+        .toast { visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #f44336; color: #fff; text-align: center; border-radius: 2px; padding: 16px; position: fixed; z-index: 1; left: 50%; bottom: 30px; font-size: 17px; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .toast.show { visibility: visible; opacity: 1; }
+        table { margin: auto; border-collapse: collapse; width: 80%; }
+        th, td { border: 1px solid #444444; padding: 8px; text-align: center; }
+        th { background-color: #ddd; }
+         body {
+        background-image: url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1400&q=80');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-position: center;
+    }
+    .card {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    border: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+.titlu-meteo {
+    color: white;
+}
+
+button,
+input[type="submit"] {
+    background-color: #285c1f !important; /* Gri standard Bootstrap (.btn-secondary) */
+    color: white !important;
+    border: none !important;
+}
+
+button:hover,
+input[type="submit"]:hover {
+    background-color: #021d08 !important; /* Gri mai închis la hover */
+}
+#replace_table thead th {
+    background-color: #ddd;
+}
+
+
+    </style>
+</head>
+<body>
+
+
+
+
+<div class="container py-4">
+    <h1 class="titlu-meteo mb-4 text-center"><i class="fas fa-cloud-sun"></i> Prognoza Meteo</h1>
+
+
+    <div class="row g-4">
+
+        <!-- Adaugă oraș -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-plus-circle"></i> Adaugă oraș</h5>
+                <form onsubmit="createWeather(event)">
+                    <input class="form-control mb-2" type="number" id="create_id" placeholder="ID" required />
+                    <input class="form-control mb-2" type="text" id="create_oras" placeholder="Oraș" required />
+                    <input class="btn btn-primary" type="submit" value="Adaugă" />
+                </form>
+            </div>
+        </div>
+
+        <!-- Afișează orașe -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-list-ul"></i> Orașe introduse</h5>
+                <button class="btn btn-secondary mb-2" onclick="getAllWeather()">Afișează lista</button>
+                <div id="collection_output"></div>
+            </div>
+        </div>
+
+        <!-- Afișează după ID -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-id-card"></i> Afișează oraș după ID</h5>
+                <input class="form-control mb-2" type="number" id="get_id" placeholder="ID" />
+                <button class="btn btn-info" onclick="getWeatherById()">Afișează</button>
+                <div id="id_output" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Actualizează -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-sync-alt"></i> Actualizează</h5>
+                <form onsubmit="updateWeather(event)">
+                    <input class="form-control mb-2" type="number" id="update_id" placeholder="ID" required />
+                    <input class="form-control mb-2" type="text" id="update_oras" placeholder="Oraș" />
+                    <input class="btn btn-warning" type="submit" value="Actualizează" />
+                </form>
+            </div>
+        </div>
+
+        <!-- Șterge după ID -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-trash-alt"></i> Șterge oraș după ID</h5>
+                <input class="form-control mb-2" type="number" id="delete_id" placeholder="ID" />
+                <button class="btn btn-danger" onclick="deleteWeather()">Șterge</button>
+            </div>
+        </div>
+
+        <!-- Șterge toate -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-broom"></i> Șterge toate orașele</h5>
+                <button class="btn btn-danger" onclick="deleteAllWeather()">Șterge colecția</button>
+            </div>
+        </div>
+
+        <!-- Lista nouă -->
+        <div class="col-12">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-th-list"></i> Lista nouă cu orașe</h5>
+                <div class="table-responsive">
+                    <table id="replace_table" class="table table-bordered">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>ID</th>
+                                <th>Oraș</th>
+                                <th>Șterge</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="number" class="form-control cell-id" required></td>
+                                <td><input type="text" class="form-control cell-oras" required></td>
+                                <td><button type="button" class="btn btn-outline-danger" onclick="removeRow(this)">✖</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn btn-success flex-fill" onclick="addRow()">Adaugă oraș nou</button>
+                <button class="btn btn-primary flex fill" onclick="replaceAllWeatherFromTable()">Înlocuiește</button>
+            </div>
+        </div>
+
+        <!-- Prognoză -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-cloud-showers-heavy"></i> Prognoza pe 5 zile</h5>
+                <label for="city_select" class="form-label">Selectează orașul:</label>
+                <select id="city_select" class="form-select mb-2"></select>
+                <button class="btn btn-info" onclick="getForecast()">Arată prognoza</button>
+                <div id="forecast_output" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Harta -->
+        <div class="col-md-6">
+            <div class="card p-3">
+                <h5 class="card-title"><i class="fas fa-map-marked-alt"></i> Vezi orașele pe hartă</h5>
+                <a href="/harta" class="btn" style="background-color: #285c1f; color: white;">Deschide Harta Meteo</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addRow() {
+    const tbody = document.querySelector('#replace_table tbody');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td><input type="number" class="cell-id" required></td>
+        <td><input type="text" class="cell-oras" required></td>
+        <td><button type="button" onclick="removeRow(this)">✖</button></td>
+    `;
+    tbody.appendChild(newRow);
+}
+
+function removeRow(button) {
+    const row = button.closest('tr');
+    row.remove();
+}
+
+function replaceAllWeatherFromTable() {
+    const rows = document.querySelectorAll('#replace_table tbody tr');
+    const data = [];
+
+    for (const row of rows) {
+        const idInput = row.querySelector('.cell-id');
+        const orasInput = row.querySelector('.cell-oras');
+
+        if (!idInput.value || !orasInput.value) {
+            alert('Toate câmpurile sunt obligatorii!');
+            return;
+        }
+
+        data.push({
+            id: Number(idInput.value),
+            oras: orasInput.value.trim()
+        });
+    }
+
+    fetch('/api/weather', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(resData => {
+        if (resData.error) {
+            alert('Eroare: ' + resData.error);
+        } else {
+            alert('Colecția a fost înlocuită cu succes!');
+            document.querySelector('#replace_table tbody').innerHTML = '';
+            addRow();
+            getAllWeather();
+        }
+    })
+    .catch(() => alert('Eroare la înlocuire.'));
+}
+
+function showErrorToast(message) {
+    const toast = document.getElementById('errorToast');
+    toast.textContent = message;
+    toast.className = "toast show";
+    setTimeout(() => {
+        toast.className = toast.className.replace("show", "");
+    }, 3000);
+}
+
+function getAllWeather() {
+    fetch('/api/weather')
+    .then(res => res.json())
+    .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+            document.getElementById('collection_output').innerHTML = '<p>Nu există date în colecție.</p>';
+            return;
+        }
+        let html = '<table class="table-mica"><thead><tr><th>ID</th><th>Oraș</th></tr></thead><tbody>';
+
+        data.forEach(item => {
+            html += `<tr><td>${item.id}</td><td>${item.oras}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('collection_output').innerHTML = html;
+    })
+    .catch(() => showErrorToast('Eroare la obținerea datelor.'));
+}
+
+function getWeatherById() {
+    const id = document.getElementById('get_id').value.trim();
+    if (!id) {
+        showErrorToast('Introdu un ID valid.');
+        return;
+    }
+    fetch(`/api/weather/${id}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showErrorToast(data.error);
+            document.getElementById('id_output').innerHTML = '';
+        } else {
+            let html = '<table><thead><tr><th>ID</th><th>Oraș</th></tr></thead><tbody>';
+            html += `<tr><td>${data.id}</td><td>${data.oras}</td></tr></tbody></table>`;
+            document.getElementById('id_output').innerHTML = html;
+        }
+    })
+    .catch(() => showErrorToast('Eroare la obținerea datelor.'));
+}
+
+function createWeather(event) {
+    event.preventDefault();
+    const id = document.getElementById('create_id').value.trim();
+    const oras = document.getElementById('create_oras').value.trim();
+
+    if (!id || !oras) {
+        showErrorToast('Completează toate câmpurile.');
+        return;
+    }
+
+    fetch('/api/weather', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id: Number(id), oras })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showErrorToast(data.error);
+        } else {
+            alert('Înregistrare adăugată cu succes!');
+            document.querySelector('form[onsubmit="createWeather(event)"]').reset();
+            getAllWeather();
+        }
+    })
+    .catch(() => showErrorToast('Eroare la adăugare.'));
+}
+
+function updateWeather(event) {
+    event.preventDefault();
+    const id = document.getElementById('update_id').value.trim();
+    const oras = document.getElementById('update_oras').value.trim();
+
+    if (!id || !oras) {
+        showErrorToast('Completează ID și oraș pentru actualizare.');
+        return;
+    }
+
+    fetch(`/api/weather/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ oras })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showErrorToast(data.error);
+        } else {
+            alert('Înregistrare actualizată cu succes!');
+            document.querySelector('form[onsubmit="updateWeather(event)"]').reset();
+            getAllWeather();
+        }
+    })
+    .catch(() => showErrorToast('Eroare la actualizare.'));
+}
+
+function deleteWeather() {
+    const id = document.getElementById('delete_id').value.trim();
+    if (!id) {
+        showErrorToast('Introdu un ID valid.');
+        return;
+    }
+    if (!confirm(`Ești sigur că vrei să ștergi ID-ul ${id}?`)) return;
+
+    fetch(`/api/weather/${id}`, {
+        method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showErrorToast(data.error);
+        } else {
+            alert('Șters cu succes!');
+            document.getElementById('delete_id').value = '';
+            getAllWeather();
+        }
+    })
+    .catch(() => showErrorToast('Eroare la ștergere.'));
+}
+
+function deleteAllWeather() {
+    if (!confirm('Ești sigur că vrei să ștergi TOATĂ colecția?')) return;
+
+    fetch('/api/weather', { method: 'DELETE' })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            showErrorToast(data.error);
+        } else {
+            alert('Colecția a fost ștearsă!');
+            document.getElementById('collection_output').innerHTML = '';
+        }
+    })
+    .catch(() => showErrorToast('Eroare la ștergerea colecției.'));
+}
+
+function getForecast() {
+    fetch('/api/forecast')
+    .then(res => res.json())
+    .then(data => {
+        if (!Array.isArray(data) || data.length === 0) {
+            document.getElementById('forecast_output').innerHTML = '<p>Nu există prognoze disponibile.</p>';
+            return;
+        }
+        let html = '';
+        data.forEach(city => {
+            html += `<h3>${city.oras}</h3>`;
+            if (city.error) {
+                html += `<p style="color:red;">${city.error}</p>`;
+                return;
+            }
+            html += `<table><thead><tr><th>Data</th><th>Temperatura (°C)</th><th>Umiditate (%)</th><th>Descriere</th></tr></thead><tbody>`;
+            city.prognoza.forEach(day => {
+                html += `<tr><td>${day.data}</td><td>${day.temperatura.toFixed(1)}</td><td>${day.umiditate}</td><td>${day.descriere}</td></tr>`;
+            });
+            html += `</tbody></table><br/>`;
+        });
+        document.getElementById('forecast_output').innerHTML = html;
+    })
+    .catch(() => showErrorToast('Eroare la obținerea prognozei.'));
+}
+
+
+</script>
+
+<div id="errorToast" class="toast">Acesta este un mesaj de eroare!</div>
+ <script>
+window.onload = () => {
+    fetch('/api/weather')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('city_select');
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.oras;
+                option.textContent = item.oras;
+                select.appendChild(option);
+            });
+        });
+};
+
+function getForecast() {
+    const city = document.getElementById('city_select').value;
+    if (!city) {
+        showErrorToast("Selectează un oraș!");
+        return;
+    }
+
+    fetch(`/api/forecast?city=${encodeURIComponent(city)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('forecast_output').innerHTML = `<p>${data.error}</p>`;
+                return;
+            }
+
+            let html = `<h3>Prognoza pentru ${city}</h3>`;
+            html += `<table><thead><tr><th>Data</th><th>Temperatură (°C)</th><th>Umiditate (%)</th><th>Descriere</th></tr></thead><tbody>`;
+            data.prognoza.forEach(entry => {
+                html += `<tr>
+                    <td>${entry.data}</td>
+                    <td>${entry.temperatura}</td>
+                    <td>${entry.umiditate}</td>
+                    <td>${entry.descriere}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('forecast_output').innerHTML = html;
+        })
+        .catch(() => {
+            showErrorToast('Eroare la obținerea prognozei.');
+        });
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</body>
+</html>
+

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <title>Hartă Meteo și Obiective Turistice</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            color: #004911;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            background-color: #0e5717;
+            color: white;
+            box-shadow: 0 2px 6px rgba(7, 50, 3, 0.2);
+        }
+
+        #map {
+            height: 90vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hartă cu orașe, vreme și atracții turistice</h1>
+    <div id="map"></div>
+
+    <script>
+        const map = L.map('map').setView([45.9432, 24.9668], 6); // România
+
+        // Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Icon pentru vreme – MĂRIT
+        const weatherIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/1116/1116453.png',
+            iconSize: [48, 48],
+            iconAnchor: [24, 48],
+            popupAnchor: [0, -48]
+        });
+
+        // Icon pentru atracții turistice – PUȚIN MĂRIT
+        const attractionIcon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        // Obține date din API
+        fetch('/api/mapdata')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(city => {
+                    // Marker pentru vreme
+                    const weatherMarker = L.marker([city.lat, city.lon], { icon: weatherIcon }).addTo(map);
+                    const weatherPopup = `
+                        <strong>${city.oras}</strong><br>
+                        ${city.descriere}, ${city.temp}°C<br>
+                        <img src="${city.icon}" alt="weather icon" width="80" style="margin-top:8px;">
+                    `;
+                    weatherMarker.bindPopup(weatherPopup);
+
+                    // Marker pentru atracții
+                   if (city.atractii && city.atractii.length > 0) {
+    city.atractii.forEach(attraction => {
+        L.marker([attraction.lat, attraction.lon], { icon: attractionIcon })
+            .addTo(map)
+            .bindPopup(`
+                <div style="max-width: 500px; word-wrap: break-word;">
+                    <strong>${attraction.nume}</strong><br>
+                    Tip: ${attraction.tip}
+                </div>
+            `);
+    });
+}
+
+                });
+            })
+            .catch(err => {
+                console.error("Eroare la încărcarea datelor:", err);
+            });
+
+            
+    </script>
+
+
+</body>
+</html>
